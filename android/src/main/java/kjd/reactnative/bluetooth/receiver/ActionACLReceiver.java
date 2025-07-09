@@ -56,6 +56,7 @@ public class ActionACLReceiver extends BroadcastReceiver {
             // telling the Module when it has successfully opened the connection.
             Log.d(this.getClass().getSimpleName(),
                     String.format("ACL Connected for device %s", device.getAddress()));
+            mCallback.onACLConnected(new NativeDevice(device));
         } else if (BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED.equals(action)) {
             Log.d(this.getClass().getSimpleName(),
                     String.format("Connection state changed for device %s from %s to %s",
@@ -93,5 +94,6 @@ public class ActionACLReceiver extends BroadcastReceiver {
          */
         void onACLDisconnected(NativeDevice device);
 
+        void onACLConnected(NativeDevice device);
     }
 }

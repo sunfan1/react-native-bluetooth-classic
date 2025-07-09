@@ -1362,6 +1362,13 @@ public class RNBluetoothClassicModule
         sendEvent(EventType.DEVICE_DISCONNECTED, device.map());
     }
 
+    @Override
+    public void onACLConnected(NativeDevice device) {
+        Log.d(TAG, "onACLConnected to " + device.getAddress());
+
+        sendEvent(EventType.DEVICE_CONNECTED, device.map());
+    }
+
     /**
      * Sends a {@link EventType} to the React Native JS module
      * {@link com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter}.
