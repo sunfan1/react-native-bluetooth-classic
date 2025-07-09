@@ -385,8 +385,8 @@ public class RNBluetoothClassicModule
         } else {
             Activity activity = getCurrentActivity();
             mEnabledPromise = promise;
-            
-            if (activity != null) {            
+
+            if (activity != null) {
                 Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 activity.startActivityForResult(intent, BluetoothRequest.ENABLE_BLUETOOTH.code);
             } else {
@@ -461,14 +461,27 @@ public class RNBluetoothClassicModule
     @ReactMethod
     @SuppressWarnings("unused")
     public void getConnectedDevices(Promise promise) {
-        WritableArray connected = Arguments.createArray();
-        for (DeviceConnection connection : mConnections.values()) {
-            connected.pushMap(new NativeDevice(connection.getDevice()).map());
+//        WritableArray connected = Arguments.createArray();
+//        for (DeviceConnection connection : mConnections.values()) {
+//            connected.pushMap(new NativeDevice(connection.getDevice()).map());
+//        }
+//
+//        Log.d(TAG, "getConnectedDevices: " + connected.toString());
+//
+//        promise.resolve(connected);
+        WritableArray bonded = Arguments.createArray();
+        try {
+            for (BluetoothDevice device : mAdapter.getBondedDevices()) {
+                boolean isConnected = (boolean) BluetoothDevice.class.getDeclaredMethod("isConnected", (Class[]) null).invoke(device, (Object[]) null);
+                if(isConnected){
+                    NativeDevice nativeDevice = new NativeDevice(device);
+                    bonded.pushMap(nativeDevice.map());
+                }
+            }
+        } catch (Exception e) {
+            promise.reject("-1", "获取蓝牙失败");
         }
-
-        Log.d(TAG, "getConnectedDevices: " + connected.toString());
-
-        promise.resolve(connected);
+        promise.resolve(bonded);
     }
 
     /**
