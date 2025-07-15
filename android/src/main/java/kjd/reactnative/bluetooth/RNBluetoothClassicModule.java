@@ -2,8 +2,10 @@
 package kjd.reactnative.bluetooth;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -846,42 +848,65 @@ public class RNBluetoothClassicModule
                     return;
                 }
 
-                ConnectionConnectorFactory connectorFactory = mConnectorFactories.get(connectorType);
-                ConnectionConnector connector = connectorFactory.create(device, properties);
-                connector.addListener(new ConnectionConnector.ConnectorListener<BluetoothSocket>() {
+                mAdapter.getProfileProxy(this.getCurrentActivity(), new BluetoothProfile.ServiceListener() {
                     @Override
-                    public void success(BluetoothSocket bluetoothSocket) {
-                        // Remove from connecting and add to connected
-                        mConnecting.remove(address);
-
-                        try {
-                            // Create the appropriate Connection type and add it to the connected list
-                            DeviceConnectionFactory connectionFactory = mConnectionFactories.get(connectionType);
-                            DeviceConnection connection = connectionFactory.create(bluetoothSocket, properties);
-                            connection.onDisconnect(onDisconnect);
-                            mConnections.put(address, connection);
-
-                            // Now start the connection and let React Native know
-                            new Thread(connection).start();
-                            promise.resolve(nativeDevice.map());
-                        } catch (IOException e) {
-                            promise.reject(new ConnectionFailedException(nativeDevice, e));
+                    public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                        if (profile == BluetoothProfile.A2DP) {
+                            BluetoothA2dp bluetoothA2dp = (BluetoothA2dp) proxy;
+                            try {
+                                Method connect = bluetoothA2dp.getClass().getDeclaredMethod("connect", BluetoothDevice.class);
+                                connect.setAccessible(true);
+                                boolean isSuccess = (boolean) connect.invoke(bluetoothA2dp, device);
+                                if (isSuccess) {
+                                    promise.resolve(nativeDevice.map());
+                                } else {
+                                    promise.reject("-1", "连接蓝牙失败");
+                                }
+                            } catch (Exception e) {
+                                promise.reject(e);
+                            }
                         }
                     }
 
                     @Override
-                    public void failure(Exception e) {
-                        // Remove from connecting and notify of failure
-                        mConnecting.remove(address);
-                        promise.reject(new ConnectionFailedException(nativeDevice, e));
+                    public void onServiceDisconnected(int profile) {
                     }
-                });
-
-                mConnecting.put(address, connector);
-                connector.start();
-            } catch (IOException e) {
-                promise.reject(new ConnectionFailedException(nativeDevice, e));
-            } catch (IllegalStateException e) {
+                }, BluetoothProfile.A2DP);
+//                ConnectionConnectorFactory connectorFactory = mConnectorFactories.get(connectorType);
+//                ConnectionConnector connector = connectorFactory.create(device, properties);
+//                connector.addListener(new ConnectionConnector.ConnectorListener<BluetoothSocket>() {
+//                    @Override
+//                    public void success(BluetoothSocket bluetoothSocket) {
+//                        // Remove from connecting and add to connected
+//                        mConnecting.remove(address);
+//
+//                        try {
+//                            // Create the appropriate Connection type and add it to the connected list
+//                            DeviceConnectionFactory connectionFactory = mConnectionFactories.get(connectionType);
+//                            DeviceConnection connection = connectionFactory.create(bluetoothSocket, properties);
+//                            connection.onDisconnect(onDisconnect);
+//                            mConnections.put(address, connection);
+//
+//                            // Now start the connection and let React Native know
+//                            new Thread(connection).start();
+//                            promise.resolve(nativeDevice.map());
+//                        } catch (IOException e) {
+//                            promise.reject(new ConnectionFailedException(nativeDevice, e));
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void failure(Exception e) {
+//                        // Remove from connecting and notify of failure
+//                        mConnecting.remove(address);
+//                        promise.reject(new ConnectionFailedException(nativeDevice, e));
+//                    }
+//                });
+//
+//                mConnecting.put(address, connector);
+//                connector.start();
+            } catch (Exception e) {
+                e.printStackTrace();
                 promise.reject(e);
             }
         }
