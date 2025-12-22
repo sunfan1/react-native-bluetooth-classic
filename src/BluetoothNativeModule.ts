@@ -224,6 +224,7 @@ export default interface BluetoothNativeModule {
    * @param eventType
    */
   removeAllListeners(eventType: string): void;
+  sendLyrics(title: String): Promise<String>;
 }
 
 export interface StandardOptions {
