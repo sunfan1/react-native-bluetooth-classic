@@ -458,14 +458,21 @@ export default class BluetoothModule {
     if (Platform.OS == 'ios') throw new Error('Method not implemented.');
     return this._nativeModule.openBluetoothSettings();
   }
-  sendLyrics(title: String): Promise<String> {
-    return this._nativeModule.sendLyrics(title);
+  sendLyrics(lrc: string): Promise<String> {
+    return this._nativeModule.sendLyrics(lrc);
   }
-
   onDeviceAction(
-      listener: Object
+      listener: BluetoothEventListener<Object>
   ): BluetoothEventSubscription {
     return this.createBluetoothEventSubscription(BluetoothEventType.DEVICE_ACTION, listener);
+  }
+  getCurrentRoute(): Promise<Object> {
+    return this._nativeModule.getCurrentRoute();
+  }
+  onAudioChange(
+      listener: BluetoothEventListener<Object>
+  ): BluetoothEventSubscription {
+    return this.createBluetoothEventSubscription(BluetoothEventType.AUDIO_CHANGE, listener);
   }
 }
 

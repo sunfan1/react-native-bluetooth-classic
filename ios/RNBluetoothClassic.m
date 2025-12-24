@@ -30,4 +30,27 @@
 RCT_EXTERN_METHOD(isBluetoothEnabled: (RCTPromiseResolveBlock)resolver
                   rejecter: (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(sendLyrics:(NSString *)lrc)
+
+RCT_EXTERN_METHOD(getCurrentRoute: (RCTPromiseResolveBlock)resolver
+                  rejecter: (RCTPromiseRejectBlock)reject)
+
+/**
+* Adds a listener to the module.  Listeners can be generic: connect, disconnect, etc. or they can
+* be device specific read@AA:BB:CC:DD:EE.  Adding a listener will increment a counter
+* keyed on the provided eventType
+*/
+RCT_EXTERN_METHOD(addListener: (NSString *)requestedEvent)
+
+/**
+* Remove a specified listener.  LIke addListener this can be generic or device specific
+*/
+RCT_EXTERN_METHOD(removeListener: (NSString *)requestedEvent)
+
+/**
+* Removes all listeners of this type.  This sets the counter to 0 (stopping all messages from
+* being sent to React Native).
+*/
+RCT_EXTERN_METHOD(removeAllListeners: (NSString *)requestedEvent)
+
 @end

@@ -13,6 +13,7 @@ export enum BluetoothEventType {
   ERROR = 'ERROR',
   DEVICE_DISCOVERED = 'DEVICE_DISCOVERED',
   DEVICE_ACTION = 'DEVICE_ACTION',
+  AUDIO_CHANGE = 'AUDIO_CHANGE',
 }
 
 /**
