@@ -11,10 +11,15 @@ import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.media.MediaMetadata;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -909,6 +914,63 @@ public class RNBluetoothClassicModule
                 e.printStackTrace();
                 promise.reject(e);
             }
+        }
+    }
+
+    private MediaSession mSession;
+    @ReactMethod
+    @SuppressWarnings("unused")
+    public void sendLyrics(String title, Promise promise) {
+        try {
+            if (mSession == null || !mSession.isActive()) {
+                mSession = new MediaSession(getCurrentActivity(), "AudioTag");
+                mSession.setCallback(new MediaSession.Callback() {
+                    @Override
+                    public void onPlay() {
+                        super.onPlay();
+                        WritableMap map = Arguments.createMap();
+                        map.putString("action", "play");
+                        sendEvent(EventType.DEVICE_ACTION, map);
+                    }
+
+                    @Override
+                    public void onPause() {
+                        super.onPause();
+                        WritableMap map = Arguments.createMap();
+                        map.putString("action", "pause");
+                        sendEvent(EventType.DEVICE_ACTION, map);
+                    }
+
+                    @Override
+                    public void onSkipToNext() {
+                        super.onSkipToNext();
+                        WritableMap map = Arguments.createMap();
+                        map.putString("action", "next");
+                        sendEvent(EventType.DEVICE_ACTION, map);
+                    }
+
+                    @Override
+                    public void onSkipToPrevious() {
+                        super.onSkipToPrevious();
+                        WritableMap map = Arguments.createMap();
+                        map.putString("action", "prev");
+                        sendEvent(EventType.DEVICE_ACTION, map);
+                    }
+                });
+                mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+                mSession.setPlaybackState(new PlaybackState.Builder()
+                        .setState(PlaybackState.STATE_PLAYING, 1, 1.0f)
+                        .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
+                                PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+                        .build());
+                mSession.setActive(true);
+            }
+            mSession.setMetadata(new MediaMetadata.Builder()
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                    .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            promise.reject("SEND_ERROR", e.getMessage());
         }
     }
 

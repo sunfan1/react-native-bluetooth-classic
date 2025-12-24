@@ -44,12 +44,15 @@ public enum EventType {
      */
     ERROR("error"),
 
+    DEVICE_ACTION("deviceAction"),
+
     /**
      * A number of requests/questions have come in asking if is possible to search for a specific
      * device.  This will give users the ability to listen for individual device(s) discovered
      * and manage that process.   For example, they could start discovery and then listen for
      * a specific device, once that device is found discovery can be stopped.
      */
+
     DEVICE_DISCOVERED("deviceDiscovered");
 
     public final String code;
