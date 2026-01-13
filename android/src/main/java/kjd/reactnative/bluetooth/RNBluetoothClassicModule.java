@@ -40,6 +40,8 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -922,7 +924,13 @@ public class RNBluetoothClassicModule
     @SuppressWarnings("unused")
     public void sendLyrics(String title, Promise promise) {
         try {
-            if (mSession == null || !mSession.isActive()) {
+            if (title == null) {
+                mSession.setCallback(null);
+                mSession.release();
+                mSession = null;
+                return;
+            }
+            if (mSession == null) {
                 mSession = new MediaSession(getCurrentActivity(), "AudioTag");
                 mSession.setCallback(new MediaSession.Callback() {
                     @Override
@@ -963,11 +971,29 @@ public class RNBluetoothClassicModule
                         .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
                                 PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                         .build());
-                mSession.setActive(true);
             }
+//            byte[] data = android.util.Base64.decode(title.getBytes(), android.util.Base64.DEFAULT);
+            title = new String(title.getBytes(), "utf-8");
+            mSession.setActive(true);
             mSession.setMetadata(new MediaMetadata.Builder()
                     .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                    .putLong(MediaMetadata.METADATA_KEY_DURATION, 1000)
                     .build());
+            mSession.setActive(false);
+//            mSession.setCallback(null);
+//            mSession.setActive(false);
+//            mSession = null;
+//            new Thread(){
+//                @Override
+//                public void run() {
+//                    try {
+//                        Thread.sleep(120);
+//                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                    mSession.setActive(false);
+//                }
+//            }.start();
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject("SEND_ERROR", e.getMessage());
