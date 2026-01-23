@@ -922,14 +922,13 @@ public class RNBluetoothClassicModule
     private MediaSession mSession;
     @ReactMethod
     @SuppressWarnings("unused")
-    public void sendLyrics(String title, Promise promise) {
+    public void sendLyrics(ReadableMap params, Promise promise) {
         try {
-            if (title == null) {
-                mSession.setCallback(null);
-                mSession.release();
-                mSession = null;
-                return;
-            }
+//            if (mSession != null) {
+//                mSession.setCallback(null);
+//                mSession.setActive(false);
+//                mSession.release();
+//            }
             if (mSession == null) {
                 mSession = new MediaSession(getCurrentActivity(), "AudioTag");
                 mSession.setCallback(new MediaSession.Callback() {
@@ -966,20 +965,42 @@ public class RNBluetoothClassicModule
                     }
                 });
                 mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+//                if (params.hasKey("playState")) {
+//                    mSession.setPlaybackState(new PlaybackState.Builder()
+//                            .setState(params.getInt("playState"), 1, 1.0f)
+//                            .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
+//                                    PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+//                            .build());
+//                } else {
+//                    mSession.setPlaybackState(new PlaybackState.Builder()
+//                            .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
+//                                    PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+//                            .build());
+//                }
+                mSession.setActive(true);
+            }
+            if (params.hasKey("playState")) {
                 mSession.setPlaybackState(new PlaybackState.Builder()
-                        .setState(PlaybackState.STATE_PLAYING, 1, 1.0f)
+                        .setState(params.getInt("playState"), params.getInt("position"), 1.0f)
                         .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
                                 PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                         .build());
             }
-//            byte[] data = android.util.Base64.decode(title.getBytes(), android.util.Base64.DEFAULT);
-            title = new String(title.getBytes(), "utf-8");
-            mSession.setActive(true);
-            mSession.setMetadata(new MediaMetadata.Builder()
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                    .putLong(MediaMetadata.METADATA_KEY_DURATION, 1000)
-                    .build());
-            mSession.setActive(false);
+//            Log.e("title=", title);
+//            byte[] data = android.util.Base64.decode(title, android.util.Base64.DEFAULT);
+//            title = new String(data, "utf-8");
+//            Log.e("title=", title);
+            if (params.hasKey("title")) {
+                String title = params.getString("title");
+                mSession.setMetadata(new MediaMetadata.Builder()
+                        .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                        .putString(MediaMetadata.METADATA_KEY_ALBUM, title)
+                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, title)
+                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, title)
+                        .putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"))
+                        .build());
+            }
+//            mSession.setActive(false);
 //            mSession.setCallback(null);
 //            mSession.setActive(false);
 //            mSession = null;
