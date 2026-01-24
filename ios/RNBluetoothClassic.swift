@@ -153,7 +153,7 @@ class RNBluetoothClassic : NSObject, RCTBridgeModule {
     var isControl = true
     
     @objc
-    func sendLyrics(_ lrc: String) {
+    func sendLyrics(_ params: NSDictionary) {
         if (isControl) {
             isControl = false;
             let commandCenter = MPRemoteCommandCenter.shared()
@@ -174,14 +174,15 @@ class RNBluetoothClassic : NSObject, RCTBridgeModule {
         let infoCenter = MPNowPlayingInfoCenter.default()
         var nowPlayingInfo = [String: Any]()
 
-        // 关键技巧：为了让车机感知到变化，有些开发者会将歌词放在 Title
-        // 或者专门的歌词字段（如果目标设备支持 AVRCP 1.6+）
-        nowPlayingInfo[MPMediaItemPropertyTitle] = lrc
+        nowPlayingInfo[MPMediaItemPropertyTitle] = params["title"]
         
-        // 必须设置播放速率和时间，否则部分车机不会刷新显示
-//        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
-//        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 5
-//        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 200
+        if (params["artist"] != nil) {
+            nowPlayingInfo[MPMediaItemPropertyArtist] = params["artist"]
+        }
+        
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = params["position"]
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = params["duration"]
 
         infoCenter.nowPlayingInfo = nowPlayingInfo
     }

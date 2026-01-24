@@ -30,7 +30,7 @@
 RCT_EXTERN_METHOD(isBluetoothEnabled: (RCTPromiseResolveBlock)resolver
                   rejecter: (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(sendLyrics:(NSString *)lrc)
+RCT_EXTERN_METHOD(sendLyrics:(NSDictionary *)params)
 
 RCT_EXTERN_METHOD(getCurrentRoute: (RCTPromiseResolveBlock)resolver
                   rejecter: (RCTPromiseRejectBlock)reject)
