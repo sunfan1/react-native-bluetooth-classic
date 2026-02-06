@@ -924,11 +924,6 @@ public class RNBluetoothClassicModule
     @SuppressWarnings("unused")
     public void sendLyrics(ReadableMap params, Promise promise) {
         try {
-//            if (mSession != null) {
-//                mSession.setCallback(null);
-//                mSession.setActive(false);
-//                mSession.release();
-//            }
             if (mSession == null) {
                 mSession = new MediaSession(getCurrentActivity(), "AudioTag");
                 mSession.setCallback(new MediaSession.Callback() {
@@ -965,18 +960,6 @@ public class RNBluetoothClassicModule
                     }
                 });
                 mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
-//                if (params.hasKey("playState")) {
-//                    mSession.setPlaybackState(new PlaybackState.Builder()
-//                            .setState(params.getInt("playState"), 1, 1.0f)
-//                            .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
-//                                    PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
-//                            .build());
-//                } else {
-//                    mSession.setPlaybackState(new PlaybackState.Builder()
-//                            .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE |
-//                                    PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
-//                            .build());
-//                }
                 mSession.setActive(true);
             }
             if (params.hasKey("playState")) {
@@ -986,10 +969,6 @@ public class RNBluetoothClassicModule
                                 PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                         .build());
             }
-//            Log.e("title=", title);
-//            byte[] data = android.util.Base64.decode(title, android.util.Base64.DEFAULT);
-//            title = new String(data, "utf-8");
-//            Log.e("title=", title);
             if (params.hasKey("title")) {
                 String title = params.getString("title");
                 mSession.setMetadata(new MediaMetadata.Builder()
@@ -1000,21 +979,6 @@ public class RNBluetoothClassicModule
                         .putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"))
                         .build());
             }
-//            mSession.setActive(false);
-//            mSession.setCallback(null);
-//            mSession.setActive(false);
-//            mSession = null;
-//            new Thread(){
-//                @Override
-//                public void run() {
-//                    try {
-//                        Thread.sleep(120);
-//                    } catch (InterruptedException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                    mSession.setActive(false);
-//                }
-//            }.start();
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject("SEND_ERROR", e.getMessage());
