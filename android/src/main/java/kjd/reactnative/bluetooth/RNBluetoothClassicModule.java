@@ -969,15 +969,15 @@ public class RNBluetoothClassicModule
                                 PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                         .build());
             }
-            if (params.hasKey("title")) {
-                String title = params.getString("title");
-                mSession.setMetadata(new MediaMetadata.Builder()
-                        .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                        .putString(MediaMetadata.METADATA_KEY_ALBUM, title)
-                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, title)
-                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, title)
-                        .putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"))
-                        .build());
+            if (params.hasKey("title") || params.hasKey("author")) {
+                MediaMetadata.Builder builder = new MediaMetadata.Builder();
+                if (params.hasKey("author"))
+                    builder.putString(MediaMetadata.METADATA_KEY_TITLE, params.getString("title"));
+                if (params.hasKey("title"))
+                    builder.putString(MediaMetadata.METADATA_KEY_ARTIST, params.getString("author"));
+                if (params.hasKey("duration"))
+                    builder.putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"));
+                mSession.setMetadata(builder.build());
             }
         } catch (Exception e) {
             e.printStackTrace();
