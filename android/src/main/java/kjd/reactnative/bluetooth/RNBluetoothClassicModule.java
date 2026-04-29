@@ -9,9 +9,13 @@ import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -36,6 +40,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -218,6 +224,8 @@ public class RNBluetoothClassicModule
     private AtomicReference<ConnectionAcceptor> mAcceptor = new AtomicReference(null);
 
     // region: Constructors
+    private AudioManager audioManager;
+    private AudioDeviceCallback deviceCallback;
 
     /**
      * Creates the RNBlutoothClassicModule. As a final step of initialization the
@@ -254,6 +262,38 @@ public class RNBluetoothClassicModule
 
         getReactApplicationContext().addActivityEventListener(this);
         getReactApplicationContext().addLifecycleEventListener(this);
+        audioManager = (AudioManager) getReactApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            deviceCallback = new AudioDeviceCallback() {
+                @Override
+                public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+                    AudioDeviceInfo device = addedDevices[0];
+                    WritableMap result = Arguments.createMap();
+                    result.putInt("uid", device.getId());
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        result.putString("address", device.getAddress());
+                    }
+                    result.putInt("type", device.getType());
+                    result.putString("productName", device.getProductName().toString());
+                    sendEvent(EventType.AUDIO_CHANGE, result);
+                }
+
+                @Override
+                public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+                    AudioDeviceInfo device = removedDevices[0];
+                    WritableMap result = Arguments.createMap();
+                    result.putBoolean("remove", true);
+                    result.putInt("uid", device.getId());
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        result.putString("address", device.getAddress());
+                    }
+                    result.putInt("type", device.getType());
+                    result.putString("productName", device.getProductName().toString());
+                    sendEvent(EventType.AUDIO_CHANGE, result);
+                }
+            };
+            audioManager.registerAudioDeviceCallback(deviceCallback, null);
+        }
     }
     // endregion
 
@@ -969,15 +1009,15 @@ public class RNBluetoothClassicModule
                                 PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS)
                         .build());
             }
-            if (params.hasKey("title")) {
-                String title = params.getString("title");
-                mSession.setMetadata(new MediaMetadata.Builder()
-                        .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                        .putString(MediaMetadata.METADATA_KEY_ALBUM, title)
-                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, title)
-                        .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, title)
-                        .putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"))
-                        .build());
+            if (params.hasKey("title") || params.hasKey("author")) {
+                MediaMetadata.Builder builder = new MediaMetadata.Builder();
+                if (params.hasKey("author"))
+                    builder.putString(MediaMetadata.METADATA_KEY_TITLE, params.getString("title"));
+                if (params.hasKey("title"))
+                    builder.putString(MediaMetadata.METADATA_KEY_ARTIST, params.getString("author"));
+                if (params.hasKey("duration"))
+                    builder.putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"));
+                mSession.setMetadata(builder.build());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1515,6 +1555,42 @@ public class RNBluetoothClassicModule
                     .emit(String.format("%s@%s", event.name(), device.getAddress()), body);
         } else {
             Log.e(TAG, "There is currently no active Catalyst instance");
+        }
+    }
+
+    @ReactMethod
+    @SuppressWarnings("unused")
+    public void getCurrentRoute(Promise promise) {
+//        AudioManager audioManager = (AudioManager) getReactApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+//        if (audioManager == null) {
+//            promise.reject("获取设备异常", "未知");
+//        }
+        // API 23+ 优先使用getDevices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+            AudioDeviceInfo device = devices[devices.length - 1];
+            WritableMap result = Arguments.createMap();
+            result.putInt("uid", device.getId());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                result.putString("address", device.getAddress());
+            }
+            result.putInt("type", device.getType());
+            result.putString("productName", device.getProductName().toString());
+            promise.resolve(result);
+        } else {
+            WritableMap result = Arguments.createMap();
+            // 低版本兼容（已废弃，仅作兼容）
+            if (audioManager.isWiredHeadsetOn()) {
+                result.putInt("type", 4);
+                result.putString("productName", "有线耳机");
+            } else if (audioManager.isSpeakerphoneOn()) {
+                result.putInt("type", 2);
+                result.putString("productName", "扬声器");
+            } else {
+                result.putInt("type", 1);
+                result.putString("productName", "听筒");
+            }
+            promise.resolve(result);
         }
     }
 
