@@ -79,7 +79,6 @@ class RNBluetoothClassic : NSObject, RCTBridgeModule {
             return
         }
         
-        // 打印改变的原因
         switch reason {
             case .newDeviceAvailable: // 蓝牙连接或耳机插入
                 print("检测到新音频设备已连接")
@@ -99,9 +98,12 @@ class RNBluetoothClassic : NSObject, RCTBridgeModule {
     
     private func processRoute(_ route: AVAudioSessionRouteDescription) {
         for output in route.outputs {
+            // 核心：判断是否为带麦的有线耳机
+            let isWiredHeadsetWithMic = output.portType == AVAudioSessionPortHeadphones && (output.channels?.isEmpty == false)
             sendEvent(EventType.AUDIO_CHANGE.name, body: [
                 "uid": output.uid,
-                "portName": output.portName
+                "portName": output.portName,
+                "isMic": isWiredHeadsetWithMic,
             ])
         }
     }
@@ -113,9 +115,11 @@ class RNBluetoothClassic : NSObject, RCTBridgeModule {
    ) -> Void {
        let currentRoute = AVAudioSession.sharedInstance().currentRoute
        for output in currentRoute.outputs {
+           let isWiredHeadsetWithMic = output.portType == AVAudioSessionPortHeadphones && (output.channels?.isEmpty == false)
            resolve([
             "uid": output.uid,
-            "portName": output.portName
+            "portName": output.portName,
+            "isMic": isWiredHeadsetWithMic,
            ])
        }
    }
