@@ -46,6 +46,8 @@ public enum EventType {
 
     DEVICE_ACTION("deviceAction"),
 
+    AUDIO_CHANGE("audioChange"),
+
     /**
      * A number of requests/questions have come in asking if is possible to search for a specific
      * device.  This will give users the ability to listen for individual device(s) discovered
