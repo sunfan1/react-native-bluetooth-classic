@@ -1011,9 +1011,9 @@ public class RNBluetoothClassicModule
             }
             if (params.hasKey("title") || params.hasKey("author")) {
                 MediaMetadata.Builder builder = new MediaMetadata.Builder();
-                if (params.hasKey("author"))
-                    builder.putString(MediaMetadata.METADATA_KEY_TITLE, params.getString("title"));
                 if (params.hasKey("title"))
+                    builder.putString(MediaMetadata.METADATA_KEY_TITLE, params.getString("title"));
+                if (params.hasKey("author"))
                     builder.putString(MediaMetadata.METADATA_KEY_ARTIST, params.getString("author"));
                 if (params.hasKey("duration"))
                     builder.putLong(MediaMetadata.METADATA_KEY_DURATION, params.getInt("duration"));
