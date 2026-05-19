@@ -1568,15 +1568,26 @@ public class RNBluetoothClassicModule
         // API 23+ 优先使用getDevices
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-            AudioDeviceInfo device = devices[devices.length - 1];
-            WritableMap result = Arguments.createMap();
-            result.putInt("uid", device.getId());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                result.putString("address", device.getAddress());
+//            AudioDeviceInfo device = devices[0];
+            for (AudioDeviceInfo device : devices) {
+                int type = device.getType();
+                // 判断：蓝牙 或 有线耳机
+                if (type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP        // 蓝牙媒体音频
+                        || type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO      // 蓝牙通话音频
+                        || type == AudioDeviceInfo.TYPE_WIRED_HEADSET      // 有线耳机（带麦）
+                        || type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES || type == 22 || type == 11)  // 有线耳机（不带麦）
+                {
+                    WritableMap result = Arguments.createMap();
+                    result.putInt("uid", device.getId());
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        result.putString("address", device.getAddress());
+                    }
+                    result.putInt("type", device.getType());
+                    result.putString("productName", device.getProductName().toString());
+                    promise.resolve(result);
+                    break;
+                }
             }
-            result.putInt("type", device.getType());
-            result.putString("productName", device.getProductName().toString());
-            promise.resolve(result);
         } else {
             WritableMap result = Arguments.createMap();
             // 低版本兼容（已废弃，仅作兼容）
